@@ -205,15 +205,36 @@ define('ASSET_BASE', "http://{$_SERVER['HTTP_HOST']}/assets/");
                                     color: '#000'
                                 });
                             }
-                            DOMitem.find('.item-caption').css({
+                            var DOMcaption = DOMitem.find('.item-caption');
+                            DOMcaption.css({
                                 height: options.height-6,
                                 width: w-6,
                                 opacity: 0.5,
                                 background: '#000',
                                 color: '#fff',
-                                padding: '3px' // include option to set padding
+                                padding: '3px',
+                                position: "absolute",
+                                zIndex: 2
+                            })
+                            .position({
+                                my: "top left",
+                                at: "top left",
+                                of: DOMitem
                             });
-                            DOMitem.bind('mouseover', function() {
+                            var DOMcontent = DOMitem.find('.item-content');
+                            DOMcontent
+                                    .css({
+                                        position: "absolute",
+                                        zIndex: 1,
+                                        width: DOMitem.width()
+                                    })
+                                    .position({
+                                        my: "top left",
+                                        at: "top left",
+                                        of: DOMitem
+                                    });
+                            
+                            DOMitem.bind('mouseover click', function() {
                                 var tItem = $(this).find('.item-caption');
                                 me.focusCaptionID = tItem.attr('id');
                                 me.focusItemID = $(this).attr('id');
@@ -224,7 +245,7 @@ define('ASSET_BASE', "http://{$_SERVER['HTTP_HOST']}/assets/");
                                     var focusContent = focusItem.find('.item-content');
                                     setTimeout(function() {
                                         $('.item-content:not(:visible):not(#' + focusContent.attr('id') + ')').show();
-                                    }, 250);
+                                    }, 350);
                                     focusContent.hide();
                                     focusCaption.fadeIn(250);
                                 });
