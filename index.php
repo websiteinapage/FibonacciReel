@@ -31,6 +31,10 @@ define('ASSET_BASE', "http://{$_SERVER['HTTP_HOST']}/assets/");
             #reel {
                 font-family: 'Helvetica'; font-weight: 100;
             }
+            .item-overlay {
+                background-color: #ccc;
+                opacity: 0.8;
+            }
         </style>
     </head>
     <body>
@@ -54,6 +58,8 @@ define('ASSET_BASE', "http://{$_SERVER['HTTP_HOST']}/assets/");
                 <img src="http://wallpoper.com/images/00/26/71/34/charlize-theron_00267134.jpg" />
             </li>
             <li>
+                <h1>Test with images</h1>
+                <p>And some more interesting comment</p>
                 <img src="http://images.fanpop.com/images/image_uploads/Charlize-Theron-charlize-theron-84153_1280_1024.jpg" />
             </li>
             <li>
@@ -113,6 +119,8 @@ define('ASSET_BASE', "http://{$_SERVER['HTTP_HOST']}/assets/");
                     itemClass: 'reel-items',
                     height: 240,
                     gutter: 10,
+                    overlayTextColor: '#fff',
+                    overlayDivClass: 'item-overlay',
                     data: []
                 };
                 if(arguments) {
@@ -154,6 +162,9 @@ define('ASSET_BASE', "http://{$_SERVER['HTTP_HOST']}/assets/");
                     for(var i=0; i<sequence.set.length; i++) {
                         sequence.widths[i] = w/sequence.set[i];
                     }
+                };
+                this.fetchData = function() {
+                    /** pull all ajax data for elements and build DOM **/
                 };
                 this.genWidth = function() {
                     var at = 1;
@@ -226,7 +237,9 @@ define('ASSET_BASE', "http://{$_SERVER['HTTP_HOST']}/assets/");
                                     .css({
                                         position: "absolute",
                                         zIndex: 1,
-                                        width: DOMitem.width()
+                                        width: DOMitem.width(),
+                                        height: DOMitem.height(),
+                                        overflow: "hidden"
                                     })
                                     .position({
                                         my: "top left",
@@ -263,6 +276,7 @@ define('ASSET_BASE', "http://{$_SERVER['HTTP_HOST']}/assets/");
                     console.log(rows);
                 };
                 try {
+                    this.fetchData();
                     //this.hide();
                     var at=1;
                     this.find('li').each(function() {
@@ -294,8 +308,13 @@ define('ASSET_BASE', "http://{$_SERVER['HTTP_HOST']}/assets/");
                             item.addClass('html-only');
                         }
                         var content = item.html();
-                        item.html("<div id='item-content-" + at + "' class='item-content'>" + content + "</div>");
-                        item.append("<div id='item-caption-" + at + "' class='item-caption' style='display: none'>" + thumbnail.caption + "</div>");
+                        item.html("<div id=\"item-content-" + at + "\" class='item-content'>" + content + "</div>");
+                        item.append("<div id=\"item-caption-" + at + "\" class=\"item-caption " + options.overlayDivClass + "\" style='display: none'>" + thumbnail.caption + "</div>");
+                        if(imgelem.length>0) {
+                            item.find('.item-content').css({
+                                color: options.overlayTextColor
+                            });
+                        }
                         options.data.push(thumbnail);
                         at+=1;
                     });
