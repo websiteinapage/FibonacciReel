@@ -11,38 +11,46 @@ define('ASSET_BASE', "http://{$_SERVER['HTTP_HOST']}/assets/");
     <head>
         <meta charset="UTF-8">
         <title></title>
-        <link rel="stylesheet" href="<?php echo ASSET_BASE . "common/jquery-ui/css/cupertino/jquery-ui-1.10.3.custom.min.css"; ?>" />
-        <script type="text/javascript" src="<?php echo ASSET_BASE . "common/jquery-ui/js/jquery-1.10.2.js"; ?>"></script>
-        <script type="text/javascript" src="<?php echo ASSET_BASE . "common/jquery-ui/js/jquery-ui-1.10.3.custom.min.js"; ?>"></script>
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" />
+        <script type="text/javascript" src="//code.jquery.com/jquery-1.10.2.js"></script>
+        <script type="text/javascript" src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+        <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+        <link rel="stylesheet" href="src/css/fibonacci.css" />
         <style>
-            /*
-            #reel {
-                margin: 0; padding: 0;
+            .social-share {
+                background: #fff;
+                color: #000;
+                border-radius: 50%;
+                padding: 10px;
+                margin: 0 0.5em 0 0;
+                text-decoration: none;
             }
+            .button-bar {
+                display: block;
+                margin: 1em 0 0 0;
+            }
+            /** The reel also handles and corrects for CSS borders 
             #reel > li {
-                padding: 0; 
-                float: left; display: inline-block; 
+                border: 0.5em solid #e8e8e8;
             }
-            .item-caption { display: none; width: 100%; }
-            */
-            #reel > li:hover {
-                cursor: pointer;
-            }
-            #reel {
-                font-family: 'Helvetica'; font-weight: 100;
-            }
-            .item-overlay {
-                background-color: #ccc;
-                opacity: 0.8;
-            }
+            **/
         </style>
-        <script>
-            
-        </script>
     </head>
     <body>
         <ul id="reel">
             <li>
+                <h1>This is the default text for this thumbnail</h2>
+                <p>And some more information about these photos</p>
+                <div class="caption">
+                    <span class="button-bar">
+                        <a href="https://facebook.com" class="social-share">&nbsp;<i class="fa fa-facebook"></i> </a>
+                        <a href="https://twitter.com" class="social-share"><i class="fa fa-twitter"></i></a>
+                    </span>
+                    <h1>This should be a caption in markup.</h1>
+                    <p>
+                        It can have more information, which will make it entertaining!                        
+                    </p>
+                </div>
                 <img src="http://oesteselvagem.fantasticomundodesunca.org/wp-content/uploads/2013/02/charlize-theron-HD-Wallpapers.jpg" />
             </li>
             <li>
@@ -145,380 +153,49 @@ define('ASSET_BASE', "http://{$_SERVER['HTTP_HOST']}/assets/");
                 <p>Looking forward to more exciting photos to come soon...</p>
             </li>
         </ul>
-        
+        <script src="src/js/FibonacciReel.js"></script>
         <script>
-            $.fn.fReel = function() {
-                var me = this;
-                var options = {
-                    container: '#reel',
-                    itemClass: 'reel-items',
-                    height: 240,
-                    gutter: 10,
-                    limit: 3,
-                    overlayTextColor: '#fff',
-                    overlayDivClass: 'item-overlay',
-                    data: [],
-                    datasource: null
-                };
-                if(arguments) {
-                    options = $.extend(options, arguments[0]);
-                }
-                me.css({ margin: 0, padding: 0 });
-                me.find('li').addClass(options.itemClass);
-                $('.item-caption').css({
-                    display: "none",
-                    width: "100%"
-                });
-                $('.'+options.itemClass).css({
-                    padding: 0, float: "left", display: "inline-block", 
-                    margin: "0 " + options.gutter + "px " + options.gutter + "px 0" 
-                });
-                var sequence = {
-                    set: [],
-                    wideset: [1, 2, 3, 4, 5],
-                    narrowset: [1, 2, 3],
-                    mobileset: [1, 1], /** Trick to fix bug with mobile layout **/
-                    widths: []
-                };
-                $('body').css({
-                    margin: 0, padding: 0
-                });
-                me.rows = [];
-                /** scroll position to trigger fetch **/
-                me.triggerFetchAt = 0;
-                var last_at;
-                
-                this.reLayout = function() {
-                    var w = $(options.container).width();
-                    sequence.widths = [];
-                    if($(window).width()>=1200) {
-                        sequence.set = sequence.wideset;
-                    } else if ($(window).width()>=500) {
-                        sequence.set = sequence.narrowset;
-                    } else {
-                        sequence.set = sequence.mobileset;
-                    }
-                    for(var i=0; i<sequence.set.length; i++) {
-                        sequence.widths[i] = w/sequence.set[i];
-                    }
-                    console.log(sequence.set);
-                    console.log("reLayout() done");
-                };
-                this.genWidth = function() {
-                    var at = 1;
-                    if(sequence.set.length>1) {
-                        /** Make sure rows get number of elements different from last row **/
-                        at = Math.floor(Math.random()*sequence.set.length);
-                        while(last_at===at) {
-                           at = Math.floor(Math.random()*sequence.set.length);
-                        }
-                    }
-                    last_at = at;
-                    me.rowCnt=sequence.set[at];
-                    return sequence.widths[at];
-                };
-                
-                this.init = function() {
-                    /** MUST come AFTER fetchData() **/
-                    if(!options) throw 'No options available.'; 
-                    if(!options.data) throw 'No data available.'; 
-                    if(options.data.length<1) throw 'No items available.'; 
-                    $(options.container).html("");
-                    me.at = 0;
-                    console.log("init() done");
-                };
-                
-                this.append = function() {
-                    if(!me.at) me.at = 0;
-                    var row_tally=0;
-                    // console.log(options.data);
-                    console.log("Limit: " + options.limit);
-                    console.log("Data size: " + options.data.length);
-                    do {
-                        var w = me.genWidth();
-                        var thisrow = [];
-                        w = w-options.gutter;
-                        console.log("Row " + (row_tally));
-                        for(var j=0; j<me.rowCnt && me.at<options.data.length; j++, me.at++) {
-                            var item = options.data[me.at];
-                            // append to container
-                            $(options.container).append("<li id=\"" + item.id + "\">" + item.html + "</li>");
-                            var DOMitem = $('#'+item.id);
-                            DOMitem.hide();
-                            DOMitem.css({
-                                width: w,
-                                height: options.height,
-                                padding: 0, float: "left", display: "inline-block", 
-                                margin: "0 " + options.gutter + "px " + options.gutter + "px 0"
-                            });
-                            DOMitem.fadeIn(250);
-                            if(item.img) {
-                                // track width
-                                DOMitem.css({
-                                    width: w,
-                                    margin: "0 " + options.gutter + "px " + options.gutter + "px 0",
-                                    height: options.height,
-                                    backgroundImage: "url('" + item.img.src + "')",
-                                    backgroundSize: "cover"
-                                });
-                            } else {
-                                // track width
-                                DOMitem.css({
-                                    width: w,
-                                    margin: "0 " + options.gutter + "px " + options.gutter + "px 0",
-                                    height: options.height,
-                                    color: '#000'
-                                });
-                            }
-                            var DOMcaption = DOMitem.find('.item-caption');
-                            DOMcaption.css({
-                                height: options.height-6,
-                                width: w-6,
-                                opacity: 0.5,
-                                background: '#000',
-                                color: '#fff',
-                                padding: '3px',
-                                position: "absolute",
-                                zIndex: 2
-                            })
-                            .position({
-                                my: "top left",
-                                at: "top left",
-                                of: DOMitem
-                            });
-                            var DOMcontent = DOMitem.find('.item-content');
-                            DOMcontent
-                                    .css({
-                                        position: "absolute",
-                                        zIndex: 1,
-                                        width: DOMitem.width(),
-                                        height: DOMitem.height(),
-                                        overflow: "hidden"
-                                    })
-                                    .position({
-                                        my: "top left",
-                                        at: "top left",
-                                        of: DOMitem
-                                    });
-
-                            DOMitem.bind('mouseover click', function() {
-                                var tItem = $(this).find('.item-caption');
-                                me.focusCaptionID = tItem.attr('id');
-                                me.focusItemID = $(this).attr('id');
-                                // var lastContent = $(this).find('.item-content');
-                                $(".item-caption:not(#" + tItem.attr('id') + ")").fadeOut(250, function() {
-                                    var focusCaption = $('#'+me.focusCaptionID);
-                                    var focusItem = $('#'+me.focusItemID);
-                                    var focusContent = focusItem.find('.item-content');
-                                    setTimeout(function() {
-                                        $('.item-content:not(:visible):not(#' + focusContent.attr('id') + ')').show();
-                                    }, 350);
-                                    focusContent.hide();
-                                    focusCaption.fadeIn(250);
-                                });
-                            });
-                            me.lastItem = item;
-                            // push to row last
-                            thisrow.push($.extend(item, {
-                                width: w,
-                                height: options.height
-                            }));
-                        }
-                        // fix last item in row
-                        var DOMitem = $('#'+me.lastItem.id);
-                        DOMitem.css({
-                            marginRight: 0
-                        });
-                        me.rows.push(thisrow);
-                        row_tally=row_tally+1;
-                    } while(row_tally<options.limit && me.at<options.data.length);
-                    // get last item
-                    var DOMitem = $('#'+me.lastItem.id);
-                    me.triggerFetchAt = DOMitem.position().top-DOMitem.height();
-                    console.log(me.triggerFetchAt);
-                    console.log("append() done.");
-                };
-                /*
-                this.build = function() {
-                    // var row = 1;
-                    var at = 0;
-                    rows = [];
-                    while(at<options.data.length) {
-                        // new row
-                        var w = me.genWidth();
-                        var thisrow = [];
-                        w = w-options.gutter;
-                        for(var j=0; j<me.rowCnt; j++, at++) {
-                            var item = options.data[at];
-                            thisrow.push($.extend(item, {
-                                width: w,
-                                height: options.height
-                            }));
-                            var DOMitem = $('#'+item.id);
-                            if(item.img) {
-                                // track width
-                                DOMitem.css({
-                                    width: w,
-                                    margin: "0 " + options.gutter + "px " + options.gutter + "px 0",
-                                    height: options.height,
-                                    backgroundImage: "url('" + item.img.src + "')",
-                                    backgroundSize: "cover"
-                                });
-                            } else {
-                                // track width
-                                DOMitem.css({
-                                    width: w,
-                                    margin: "0 " + options.gutter + "px " + options.gutter + "px 0",
-                                    height: options.height,
-                                    color: '#000'
-                                });
-                            }
-                            var DOMcaption = DOMitem.find('.item-caption');
-                            DOMcaption.css({
-                                height: options.height-6,
-                                width: w-6,
-                                opacity: 0.5,
-                                background: '#000',
-                                color: '#fff',
-                                padding: '3px',
-                                position: "absolute",
-                                zIndex: 2
-                            })
-                            .position({
-                                my: "top left",
-                                at: "top left",
-                                of: DOMitem
-                            });
-                            var DOMcontent = DOMitem.find('.item-content');
-                            DOMcontent
-                                    .css({
-                                        position: "absolute",
-                                        zIndex: 1,
-                                        width: DOMitem.width(),
-                                        height: DOMitem.height(),
-                                        overflow: "hidden"
-                                    })
-                                    .position({
-                                        my: "top left",
-                                        at: "top left",
-                                        of: DOMitem
-                                    });
-                            
-                            DOMitem.bind('mouseover click', function() {
-                                var tItem = $(this).find('.item-caption');
-                                me.focusCaptionID = tItem.attr('id');
-                                me.focusItemID = $(this).attr('id');
-                                // var lastContent = $(this).find('.item-content');
-                                $(".item-caption:not(#" + tItem.attr('id') + ")").fadeOut(250, function() {
-                                    var focusCaption = $('#'+me.focusCaptionID);
-                                    var focusItem = $('#'+me.focusItemID);
-                                    var focusContent = focusItem.find('.item-content');
-                                    setTimeout(function() {
-                                        $('.item-content:not(:visible):not(#' + focusContent.attr('id') + ')').show();
-                                    }, 350);
-                                    focusContent.hide();
-                                    focusCaption.fadeIn(250);
-                                });
-                            });
-                            me.lastItem = item;
-                        }
-                        // fix last item in row
-                        var DOMitem = $('#'+me.lastItem.id);
-                        DOMitem.css({
-                            marginRight: 0
-                        });
-                        rows.push(thisrow);
-                        at+=1;
-                    }
-                    console.log(rows);
-                };
-                */
-                this.constructFromElem = function() {
-                    //this.hide();
-                    var at=1;
-                    this.find('li').each(function() {
-                        var item = $(this);
-                        var item_id = 'item-'+at;
-                        item.attr('id', item_id);
-                        // item.addClass(options.itemClass);
-                        // get slide details via ajax
-                        var thumbnail = {
-                            id: item_id,
-                            caption: "<h1>This is the Cover Story</h1>This is caption #" + at,
-                            detail: "This is some more information",
-                            url: "http://twitter.com/uchechilaka",
-                            img: null,
-                            html: null
-                        };
-                        var imgelem = item.find('img:first');
-                        if(imgelem.length>0) {
-                            try {
-                                thumbnail.img = new Image();
-                                thumbnail.img.src = imgelem.attr('src');
-                            } catch(ex) {
-                                // do nothing
-                            }
-                            imgelem.remove();
-                        } else {
-                            item.addClass('html-only');
-                        }
-                        var content = item.html();
-                        // track classes
-                        item.html("<div id=\"item-content-" + at + "\" class='item-content'>" + content + "</div>");
-                        item.append("<div id=\"item-caption-" + at + "\" class=\"item-caption " + options.overlayDivClass + "\" style='display: none'>" + thumbnail.caption + "</div>");
-                        if(imgelem.length>0) {
-                            item.find('.item-content').css({
-                                color: options.overlayTextColor
-                            });
-                        }
-                        // thumbnail.class= item.attr('class');
-                        thumbnail.html = item.html();
-                        options.data.push(thumbnail);
-                        at+=1;
-                    });
-                };
-                
-                this.fetchData = function() {
-                    /** pull all ajax data for elements and build DOM **/
-                    if(!options.datasource) {
-                        // build from ul element
-                        me.constructFromElem();
-                    }
-                };
-                
-                try {
-                    this.fetchData();
-                    this.init();
-                    /** Re-layout on window resize **/
-                    this.reLayout();
-                    /** Build layout **/
-                    this.append();
-                    console.log(options);
-                    console.log(sequence.widths);
-                    var me = this;
-                    $(window).bind('scroll', function() {
-                       console.log("Scroll Top: " + $(document).scrollTop());
-                       // append more
-                       if($(document).scrollTop()>me.triggerFetchAt) {
-                           me.append();
-                       } 
-                    });
-                    /** Re-calculate widths **/
-                    $(window).bind('resize', function() {
-                        me.reLayout();
-                        clearTimeout(me.do_ReBuild);
-                        me.do_ReBuild = setTimeout(function() {
-                            me.init();
-                            me.append();
-                        }, 500);
-                    });
-                } catch(ex) { }
-            };
-            
             $(document).ready(function() {
-                $('#reel').fReel({
+                /*
+                var parseFlickr = function(data) {
+                    var arr = data.photos.photo;
+                    var items = [];
+                    for(var i=0;i<arr.length;i++) {
+                        items.push({
+                            id: arr[i].id,
+                            caption: arr[i].title,
+                            detail: arr[i].title,
+                            default_content: arr[i].title,
+                            img_url: arr[i].url_l
+                        });
+                    }
+                    return items;
+                };
+                $('#reel').FibonacciReel({
+                    height: 380,
+                    api_datasource: "http://api.flickr.com/services/rest/?method=flickr.photos.getRecent&extras=url_l&api_key=bf0309f1e4d73160291c74efe3b347e9&format=json&nojsoncallback=1",
+                    api_format_callback: parseFlickr
+                });
+        
+        
+                $.ajax({
+                    url: "http://api.flickr.com/services/rest/?method=flickr.photos.getRecent&extras=url_l&api_key=bf0309f1e4d73160291c74efe3b347e9&format=json&nojsoncallback=1",
+                    type: "post",
+                    success: function(data, status, jqXHR) {
+                        console.log(data);
+                        var items = parseFlickr(data.photos.photo);
+                        console.log(items);
+                    },
+                    error: function(jqXHR, status, err) {
+                        console.log(err);
+                    }
+                });
+                */
+                $('#reel').FibonacciReel({
                     height: 380
                 });
+                
+                
             });
         </script>
     </body>

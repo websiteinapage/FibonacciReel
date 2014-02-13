@@ -1,0 +1,16 @@
+#reel > li:hover {
+    cursor: pointer;
+}
+#reel {
+    font-family: 'Helvetica'; font-weight: 100;
+}
+.item-overlay {
+    background-color: #ccc;
+    opacity: 0.8;
+}
+.reel-items {
+    text-shadow: 1px 1px #fff;
+}
+.item-overlay {
+    text-shadow: none;
+}
